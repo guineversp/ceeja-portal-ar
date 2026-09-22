@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>CEEJA Portal AR — Atravessável v1.5</title>
+<title>CEEJA Portal AR — Atravessável v1.5.1</title>
 
 <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
 <script src="https://raw.githack.com/AR-js-org/AR.js/3.4.8/aframe/build/aframe-ar.js"></script>
@@ -125,13 +125,13 @@ AFRAME.registerComponent('portal-traverse', {
    this.inside=true;
    document.getElementById('insideWorld').classList.add('active');
    document.getElementById('status').style.display='none';
-   document.getElementById('version').textContent='CEEJA • Portal AR • DENTRO DO PORTAL • v1.5';
+   document.getElementById('version').textContent='CEEJA • Portal AR • DENTRO DO PORTAL • v1.5.1';
  },
  leave:function(){
    this.inside=false;
    document.getElementById('insideWorld').classList.remove('active');
    document.getElementById('status').style.display='block';
-   document.getElementById('version').textContent='CEEJA • Portal AR • atravessável v1.5';
+   document.getElementById('version').textContent='CEEJA • Portal AR • atravessável v1.5.1';
  },
  tick:function(){
    if(this.inside) return;
@@ -148,10 +148,10 @@ AFRAME.registerComponent('portal-traverse', {
    // On AR.js marker tracking the units are marker-relative. Trigger only very close,
    // after the user intentionally approaches the doorway.
    const s=document.getElementById('status');
-   if(d < 2.35){
+   if(d < 2.75){
       s.textContent='✨ Quase lá — atravesse a abertura…';
    }
-   if(d < 1.72){
+   if(d < 2.08){
       this.enter();
    }
  }
@@ -162,7 +162,7 @@ AFRAME.registerComponent('portal-traverse', {
 
 <body>
 <div id="status">Aponte a câmera para o marcador.</div>
-<div id="version">CEEJA • Portal AR • atravessável v1.5</div>
+<div id="version">CEEJA • Portal AR • atravessável v1.5.1</div>
 
 <div id="insideWorld">
   <div id="insideHint">✨ Você atravessou o portal</div>
@@ -193,8 +193,8 @@ AFRAME.registerComponent('portal-traverse', {
    <a-entity position="0 0 0">
 
      <!-- World visible through the doorway -->
-     <a-entity portal-world position="0 0.03 0" scale="1.10 .86 1">
-       <a-plane position="0 .92 0" width="1.60" height="1.75"
+     <a-entity portal-world position="0 0.03 0" scale="1.24 .78 1">
+       <a-plane position="0 .84 0" width="1.82" height="1.58"
                 material="shader:flat;color:#15133c;side:double"></a-plane>
 
        <!-- distant sky glow -->
@@ -221,13 +221,13 @@ AFRAME.registerComponent('portal-traverse', {
      </a-entity>
 
      <!-- physical luminous frame -->
-     <a-box position="-0.90 .92 .06" width=".13" height="1.98" depth=".12"
+     <a-box position="-1.01 .84 .06" width=".13" height="1.80" depth=".12"
             material="color:#00e6df;shader:flat;opacity:.92"></a-box>
-     <a-box position=".90 .92 .06" width=".13" height="1.98" depth=".12"
+     <a-box position="1.01 .84 .06" width=".13" height="1.80" depth=".12"
             material="color:#00e6df;shader:flat;opacity:.92"></a-box>
-     <a-box position="0 1.87 .06" width="1.93" height=".13" depth=".12"
+     <a-box position="0 1.69 .06" width="2.15" height=".13" depth=".12"
             material="color:#00e6df;shader:flat;opacity:.92"></a-box>
-     <a-box position="0 -.03 .06" width="1.93" height=".10" depth=".12"
+     <a-box position="0 -.03 .06" width="2.15" height=".10" depth=".12"
             material="color:#00e6df;shader:flat;opacity:.88"></a-box>
 
    </a-entity>
