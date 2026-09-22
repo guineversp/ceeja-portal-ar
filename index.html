@@ -1,178 +1,89 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
-  <title>CEEJA • Portal AR v1.2</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <title>CEEJA Portal AR — Diagnóstico do Marcador v1.3</title>
   <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
   <script src="https://raw.githack.com/AR-js-org/AR.js/3.4.8/aframe/build/aframe-ar.js"></script>
   <style>
-    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:transparent!important;font-family:Arial,sans-serif}
-    body{position:fixed;inset:0}
-    a-scene{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;background:transparent!important}
-    .a-canvas{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;background:transparent!important;z-index:2!important}
-    video#arjs-video{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;object-fit:cover!important;z-index:1!important;display:block!important;visibility:visible!important;opacity:1!important}
-    #hud{position:fixed;left:12px;right:12px;top:12px;z-index:20;color:white;text-align:center;pointer-events:none}
-    #msg{display:inline-block;background:rgba(5,12,25,.76);padding:9px 14px;border-radius:18px;font-size:14px;box-shadow:0 2px 12px #0008}
-    #badge{position:fixed;left:12px;bottom:12px;z-index:20;color:#fff;background:rgba(5,12,25,.7);padding:7px 10px;border-radius:12px;font-size:11px;pointer-events:none}
+    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:transparent;font-family:Arial,sans-serif}
+    #status{
+      position:fixed;z-index:9999;left:18px;right:18px;top:20px;
+      padding:14px 16px;border-radius:18px;background:rgba(9,19,28,.82);
+      color:#fff;text-align:center;font-size:18px;line-height:1.25;
+      box-shadow:0 8px 30px rgba(0,0,0,.25)
+    }
+    #status.ok{background:rgba(0,105,75,.9)}
+    #version{
+      position:fixed;z-index:9999;left:20px;bottom:20px;
+      color:#fff;background:rgba(9,19,28,.75);padding:9px 13px;border-radius:14px;font-size:14px
+    }
+    .a-enter-vr{display:none!important}
   </style>
   <script>
-    AFRAME.registerComponent('portal-demo', {
+    AFRAME.registerComponent('marker-diagnostic', {
       init: function () {
-        const root = this.el.object3D;
-        const THREE = AFRAME.THREE;
-
-        // Portal dimensions in marker units.
-        const W = 1.35, H = 2.15;
-        const y0 = 0.04;
-
-        // 1) Invisible aperture writes 1 into the stencil buffer.
-        const maskMat = new THREE.MeshBasicMaterial({
-          colorWrite:false, depthWrite:false, depthTest:false,
-          side:THREE.DoubleSide,
-          stencilWrite:true,
-          stencilRef:1,
-          stencilFunc:THREE.AlwaysStencilFunc,
-          stencilZPass:THREE.ReplaceStencilOp
+        const status = document.getElementById('status');
+        this.el.addEventListener('markerFound', () => {
+          status.textContent = '✅ MARCADOR RECONHECIDO — rastreamento funcionando';
+          status.classList.add('ok');
         });
-        const mask = new THREE.Mesh(new THREE.PlaneGeometry(W,H), maskMat);
-        mask.position.set(0, y0 + H/2, 0);
-        mask.renderOrder = 1;
-        root.add(mask);
-
-        const portalMaterial = (color, opts={}) => new THREE.MeshStandardMaterial({
-          color, roughness:opts.roughness ?? .8, metalness:opts.metalness ?? 0,
-          side:THREE.DoubleSide,
-          stencilWrite:true, stencilRef:1,
-          stencilFunc:THREE.EqualStencilFunc,
-          stencilFail:THREE.KeepStencilOp,
-          stencilZFail:THREE.KeepStencilOp,
-          stencilZPass:THREE.KeepStencilOp
+        this.el.addEventListener('markerLost', () => {
+          status.textContent = 'Marcador perdido. Mostre o desenho inteiro, com toda a borda preta.';
+          status.classList.remove('ok');
         });
-
-        // 2) Mini-world behind the doorway, visible ONLY where stencil == 1.
-        const world = new THREE.Group();
-        world.renderOrder = 2;
-        root.add(world);
-
-        const sky = new THREE.Mesh(
-          new THREE.SphereGeometry(9,24,16),
-          portalMaterial(0x24104f,{roughness:1})
-        );
-        sky.material.side = THREE.BackSide;
-        sky.position.set(0,2,-4.2); sky.renderOrder=2; world.add(sky);
-
-        const floor = new THREE.Mesh(new THREE.PlaneGeometry(8,12), portalMaterial(0x142d38));
-        floor.rotation.x = -Math.PI/2; floor.position.set(0,y0,-4.4); floor.renderOrder=2; world.add(floor);
-
-        // Moon / sun.
-        const moon = new THREE.Mesh(new THREE.SphereGeometry(.48,24,16), portalMaterial(0xffb85c,{roughness:.4}));
-        moon.position.set(-1.6,3.0,-5.2); moon.renderOrder=2; world.add(moon);
-
-        // Fantasy towers.
-        const towerMat = portalMaterial(0x6b63a8);
-        [[-1.35,.55,-2.6,.55,1.1],[-.55,.85,-3.3,.65,1.7],[.55,.65,-2.8,.7,1.3],[1.4,1.05,-3.8,.6,2.1]].forEach(a=>{
-          const m=new THREE.Mesh(new THREE.BoxGeometry(a[3],a[4],a[3]),towerMat.clone());
-          m.position.set(a[0],y0+a[4]/2,a[2]); m.renderOrder=2; world.add(m);
-          const cap=new THREE.Mesh(new THREE.ConeGeometry(a[3]*.72,.55,4),portalMaterial(0xe35f8f));
-          cap.position.set(a[0],y0+a[4]+.27,a[2]); cap.rotation.y=Math.PI/4; cap.renderOrder=2; world.add(cap);
-        });
-
-        // Glowing path.
-        const pathMat = portalMaterial(0x42e8df,{roughness:.3});
-        for(let i=0;i<8;i++){
-          const p=new THREE.Mesh(new THREE.BoxGeometry(.35,.025,.55),pathMat.clone());
-          p.position.set(Math.sin(i*.8)*.18,y0+.018,-.55-i*.55); p.renderOrder=2; world.add(p);
-        }
-
-        // 3) Physical frame stays visible in the real world.
-        const frameMat = new THREE.MeshStandardMaterial({color:0x20d7d0,roughness:.35,metalness:.45,emissive:0x063a3b,emissiveIntensity:.65});
-        const addFrame=(w,h,x,y)=>{const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,.12),frameMat);m.position.set(x,y,.035);m.renderOrder=4;root.add(m)};
-        addFrame(.13,H+.14,-W/2-.065,y0+H/2);
-        addFrame(.13,H+.14, W/2+.065,y0+H/2);
-        addFrame(W+.26,.13,0,y0+H+.065);
-        const threshold=new THREE.Mesh(new THREE.BoxGeometry(W+.26,.08,.16),frameMat); threshold.position.set(0,y0+.04,.035); threshold.renderOrder=4; root.add(threshold);
-
-        // Small particles, also clipped by portal.
-        const geo=new THREE.SphereGeometry(.035,8,6);
-        for(let i=0;i<28;i++){
-          const pm=portalMaterial(i%2?0xff78c8:0x69fff2,{roughness:.2});
-          const dot=new THREE.Mesh(geo,pm); dot.position.set((Math.random()-.5)*3, .2+Math.random()*3.2, -.7-Math.random()*5); dot.renderOrder=2; world.add(dot);
-        }
-
-        // Lighting local to marker.
-        const amb=new THREE.AmbientLight(0xffffff,1.5); root.add(amb);
-        const light=new THREE.PointLight(0x7deeff,2.2,8); light.position.set(0,2,-1); root.add(light);
-
-        // Animate world subtly.
-        this.world=world; this.moon=moon; this.t=0;
-      },
-      tick: function(time,dt){
-        if(!this.world) return;
-        this.t += (dt||0)/1000;
-        this.moon.position.y = 3.0 + Math.sin(this.t*.7)*.08;
-        this.world.rotation.y = Math.sin(this.t*.25)*.018;
       }
     });
 
-    // Keep the real camera feed as the page background and the WebGL canvas transparent above it.
-    const fixCameraLayers = () => {
-      const video = document.querySelector('#arjs-video');
-      const canvas = document.querySelector('.a-canvas');
-      if (video) {
-        Object.assign(video.style,{position:'fixed',top:'0',left:'0',width:'100vw',height:'100vh',objectFit:'cover',zIndex:'1',display:'block',visibility:'visible',opacity:'1'});
-      }
-      if (canvas) {
-        Object.assign(canvas.style,{position:'fixed',top:'0',left:'0',width:'100vw',height:'100vh',zIndex:'2',background:'transparent'});
-      }
-    };
-    window.addEventListener('load',()=>{
-      let tries=0; const timer=setInterval(()=>{ fixCameraLayers(); if(++tries>40) clearInterval(timer); },250);
-    });
-
-
-    AFRAME.registerComponent('transparent-ar-background', {
+    AFRAME.registerComponent('camera-layer-fix', {
       init: function () {
-        const apply = () => {
-          const renderer = this.el.renderer;
-          if (!renderer) return;
-          renderer.setClearColor(0x000000, 0);
-          renderer.autoClear = true;
-          const canvas = renderer.domElement;
-          if (canvas) {
-            canvas.style.background = 'transparent';
-            canvas.style.backgroundColor = 'transparent';
+        const fix = () => {
+          const v = document.querySelector('video#arjs-video');
+          const c = document.querySelector('.a-canvas');
+          if(v){
+            Object.assign(v.style,{
+              position:'fixed',top:'0',left:'0',width:'100vw',height:'100vh',
+              objectFit:'cover',zIndex:'1',display:'block',visibility:'visible'
+            });
           }
+          if(c){
+            Object.assign(c.style,{
+              position:'fixed',top:'0',left:'0',width:'100vw',height:'100vh',
+              zIndex:'2',background:'transparent'
+            });
+          }
+          if(this.el.renderer) this.el.renderer.setClearColor(0x000000,0);
         };
-        this.el.addEventListener('render-target-loaded', apply);
-        this.el.addEventListener('loaded', apply);
-        setTimeout(apply, 300);
-        setTimeout(apply, 1200);
-      }
-    });
-
-    AFRAME.registerComponent('marker-status', {
-      init:function(){
-        const msg=document.getElementById('msg');
-        this.el.addEventListener('markerFound',()=>msg.textContent='Portal encontrado 🚪 Aproxime-se devagar da abertura.');
-        this.el.addEventListener('markerLost',()=>msg.textContent='Aponte a câmera para o marcador.');
+        this.el.addEventListener('render-target-loaded', fix);
+        setTimeout(fix,300); setTimeout(fix,1000); setTimeout(fix,2500);
       }
     });
   </script>
 </head>
 <body>
-  <div id="hud"><div id="msg">Aponte a câmera para o marcador.</div></div>
-  <div id="badge">CEEJA • Portal AR • protótipo v1.2</div>
+  <div id="status">Aponte a câmera para o marcador. Vamos testar apenas o reconhecimento.</div>
+  <div id="version">CEEJA • diagnóstico do marcador • v1.3</div>
+
   <a-scene
     embedded
-    transparent-ar-background
+    camera-layer-fix
+    renderer="alpha:true; antialias:true; logarithmicDepthBuffer:true;"
     vr-mode-ui="enabled:false"
-    renderer="antialias:true; alpha:true; stencil:true; colorManagement:true; sortObjects:true; premultipliedAlpha:false"
-    arjs="sourceType:webcam; videoTexture:true; debugUIEnabled:false; detectionMode:mono; patternRatio:0.70; trackingMethod:best;"
-  >
-    <a-marker type="pattern" url="marcador.patt" emitevents="true" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5" marker-status>
-      <a-entity portal-demo></a-entity>
+    arjs="sourceType:webcam; videoTexture:false; debugUIEnabled:false; detectionMode:mono; patternRatio:0.70; trackingMethod:best;">
+
+    <a-marker type="pattern" url="./marcador.patt" marker-diagnostic
+              smooth="true" smoothCount="5" smoothTolerance="0.01" smoothThreshold="2">
+      <a-box position="0 0.45 0" scale="0.65 0.65 0.65"
+             material="color:#00ffff; opacity:0.88; transparent:true"
+             animation="property:rotation; to:0 360 0; loop:true; dur:2200; easing:linear">
+      </a-box>
+      <a-ring position="0 0.03 0" rotation="-90 0 0"
+              radius-inner="0.55" radius-outer="0.62"
+              material="color:#ffffff; opacity:0.9; transparent:true">
+      </a-ring>
     </a-marker>
+
     <a-entity camera></a-entity>
   </a-scene>
 </body>
