@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>CEEJA Portal AR — Janela v1.4</title>
+<title>CEEJA Portal AR — Janela v1.4.1</title>
 
 <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
 <script src="https://raw.githack.com/AR-js-org/AR.js/3.4.8/aframe/build/aframe-ar.js"></script>
@@ -90,7 +90,7 @@ AFRAME.registerComponent('portal-world', {
 
 <body>
 <div id="status">Aponte a câmera para o marcador.</div>
-<div id="version">CEEJA • Portal AR • janela v1.4</div>
+<div id="version">CEEJA • Portal AR • janela v1.4.1</div>
 
 <a-scene
  embedded
@@ -103,7 +103,7 @@ AFRAME.registerComponent('portal-world', {
            smooth="true" smoothCount="5" smoothTolerance="0.01" smoothThreshold="2">
 
    <!-- Portal group: upright relative to the marker -->
-   <a-entity position="0 0 0" rotation="-90 0 0">
+   <a-entity position="0 0 0">
 
      <!-- World visible through the doorway -->
      <a-entity portal-world position="0 0.05 0">
