@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>CEEJA Portal AR — Janela v1.4.1</title>
+<title>CEEJA Portal AR — Atravessável v1.5</title>
 
 <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
 <script src="https://raw.githack.com/AR-js-org/AR.js/3.4.8/aframe/build/aframe-ar.js"></script>
@@ -21,6 +21,27 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:transparent
  background:rgba(9,19,28,.75);padding:9px 13px;border-radius:14px;font-size:14px
 }
 .a-enter-vr{display:none!important}
+#insideWorld{
+ position:fixed;inset:0;z-index:3;display:none;overflow:hidden;
+ background:
+ radial-gradient(circle at 72% 20%,rgba(220,155,255,.95) 0 6%,transparent 6.5%),
+ linear-gradient(to bottom,#15133c 0 52%,#211d58 52% 100%);
+}
+#insideWorld.active{display:block}
+#insideWorld .moon{position:absolute;right:12%;top:13%;width:23vw;height:23vw;border-radius:50%;background:#d7a0ff;box-shadow:0 0 45px rgba(215,160,255,.45)}
+#insideWorld .mountain{position:absolute;bottom:30%;width:0;height:0;border-left:34vw solid transparent;border-right:34vw solid transparent;border-bottom:54vw solid #443b86}
+#insideWorld .m1{left:-17vw}.insideWorld .m2{right:-17vw}
+#insideWorld .m2{right:-18vw;border-bottom-color:#332d70}
+#insideWorld .road{position:absolute;left:40%;bottom:-4%;width:20%;height:58%;background:linear-gradient(#55f4ef,#24bfc3);clip-path:polygon(35% 0,65% 0,100% 100%,0 100%)}
+#insideWorld .spark{position:absolute;width:12px;height:12px;border-radius:50%;background:#75ffff;box-shadow:0 0 18px #75ffff}
+#exitPortal{
+ position:absolute;left:50%;bottom:8%;transform:translateX(-50%);
+ width:38vw;height:58vw;max-width:220px;max-height:340px;border:12px solid #00e6df;
+ box-shadow:0 0 30px rgba(0,230,223,.65), inset 0 0 24px rgba(0,230,223,.35);
+ background:rgba(0,0,0,.22)
+}
+#insideHint{position:absolute;left:18px;right:18px;top:20px;padding:13px 16px;border-radius:18px;background:rgba(21,19,60,.82);color:#fff;text-align:center;font-size:17px}
+#backBtn{position:absolute;left:50%;bottom:3%;transform:translateX(-50%);border:0;border-radius:999px;padding:12px 20px;font-size:16px;font-weight:700;background:#fff;color:#15133c}
 </style>
 
 <script>
@@ -85,12 +106,78 @@ AFRAME.registerComponent('portal-world', {
    });
  }
 });
+
+AFRAME.registerComponent('portal-traverse', {
+ init:function(){
+   this.inside=false;
+   this.marker=this.el;
+   this.cam=null;
+   this.portalCenter=new THREE.Vector3(0,1.0,0);
+   this.worldPos=new THREE.Vector3();
+   this.camPos=new THREE.Vector3();
+   this.lastVisible=0;
+
+   const back=()=>this.leave();
+   document.getElementById('backBtn').addEventListener('click',back);
+ },
+ enter:function(){
+   if(this.inside) return;
+   this.inside=true;
+   document.getElementById('insideWorld').classList.add('active');
+   document.getElementById('status').style.display='none';
+   document.getElementById('version').textContent='CEEJA • Portal AR • DENTRO DO PORTAL • v1.5';
+ },
+ leave:function(){
+   this.inside=false;
+   document.getElementById('insideWorld').classList.remove('active');
+   document.getElementById('status').style.display='block';
+   document.getElementById('version').textContent='CEEJA • Portal AR • atravessável v1.5';
+ },
+ tick:function(){
+   if(this.inside) return;
+   if(!this.marker.object3D.visible) return;
+   const camEl=document.querySelector('[camera]');
+   if(!camEl || !camEl.object3D) return;
+
+   // Portal center in world coordinates and camera world position.
+   this.worldPos.copy(this.portalCenter);
+   this.marker.object3D.localToWorld(this.worldPos);
+   camEl.object3D.getWorldPosition(this.camPos);
+   const d=this.worldPos.distanceTo(this.camPos);
+
+   // On AR.js marker tracking the units are marker-relative. Trigger only very close,
+   // after the user intentionally approaches the doorway.
+   const s=document.getElementById('status');
+   if(d < 2.35){
+      s.textContent='✨ Quase lá — atravesse a abertura…';
+   }
+   if(d < 1.72){
+      this.enter();
+   }
+ }
+});
+
 </script>
 </head>
 
 <body>
 <div id="status">Aponte a câmera para o marcador.</div>
-<div id="version">CEEJA • Portal AR • janela v1.4.1</div>
+<div id="version">CEEJA • Portal AR • atravessável v1.5</div>
+
+<div id="insideWorld">
+  <div id="insideHint">✨ Você atravessou o portal</div>
+  <div class="moon"></div>
+  <div class="mountain m1"></div>
+  <div class="mountain m2"></div>
+  <div class="road"></div>
+  <div class="spark" style="left:15%;top:32%"></div>
+  <div class="spark" style="left:78%;top:39%;background:#ff91f6"></div>
+  <div class="spark" style="left:28%;top:18%;background:#ff91f6"></div>
+  <div class="spark" style="left:66%;top:58%"></div>
+  <div id="exitPortal"></div>
+  <button id="backBtn">↩ Voltar pelo portal</button>
+</div>
+
 
 <a-scene
  embedded
@@ -99,15 +186,15 @@ AFRAME.registerComponent('portal-world', {
  vr-mode-ui="enabled:false"
  arjs="sourceType:webcam; videoTexture:false; debugUIEnabled:false; detectionMode:mono; patternRatio:0.70; trackingMethod:best;">
 
- <a-marker type="pattern" url="./marcador.patt" marker-status
+ <a-marker type="pattern" url="./marcador.patt" marker-status portal-traverse
            smooth="true" smoothCount="5" smoothTolerance="0.01" smoothThreshold="2">
 
    <!-- Portal group: upright relative to the marker -->
    <a-entity position="0 0 0">
 
      <!-- World visible through the doorway -->
-     <a-entity portal-world position="0 0.05 0">
-       <a-plane position="0 1.05 0" width="1.35" height="2.05"
+     <a-entity portal-world position="0 0.03 0" scale="1.10 .86 1">
+       <a-plane position="0 .92 0" width="1.60" height="1.75"
                 material="shader:flat;color:#15133c;side:double"></a-plane>
 
        <!-- distant sky glow -->
@@ -134,13 +221,13 @@ AFRAME.registerComponent('portal-world', {
      </a-entity>
 
      <!-- physical luminous frame -->
-     <a-box position="-0.76 1.05 .06" width=".13" height="2.25" depth=".12"
+     <a-box position="-0.90 .92 .06" width=".13" height="1.98" depth=".12"
             material="color:#00e6df;shader:flat;opacity:.92"></a-box>
-     <a-box position=".76 1.05 .06" width=".13" height="2.25" depth=".12"
+     <a-box position=".90 .92 .06" width=".13" height="1.98" depth=".12"
             material="color:#00e6df;shader:flat;opacity:.92"></a-box>
-     <a-box position="0 2.12 .06" width="1.65" height=".13" depth=".12"
+     <a-box position="0 1.87 .06" width="1.93" height=".13" depth=".12"
             material="color:#00e6df;shader:flat;opacity:.92"></a-box>
-     <a-box position="0 -.02 .06" width="1.65" height=".10" depth=".12"
+     <a-box position="0 -.03 .06" width="1.93" height=".10" depth=".12"
             material="color:#00e6df;shader:flat;opacity:.88"></a-box>
 
    </a-entity>
