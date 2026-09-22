@@ -1,90 +1,152 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-  <title>CEEJA Portal AR — Diagnóstico do Marcador v1.3</title>
-  <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
-  <script src="https://raw.githack.com/AR-js-org/AR.js/3.4.8/aframe/build/aframe-ar.js"></script>
-  <style>
-    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:transparent;font-family:Arial,sans-serif}
-    #status{
-      position:fixed;z-index:9999;left:18px;right:18px;top:20px;
-      padding:14px 16px;border-radius:18px;background:rgba(9,19,28,.82);
-      color:#fff;text-align:center;font-size:18px;line-height:1.25;
-      box-shadow:0 8px 30px rgba(0,0,0,.25)
-    }
-    #status.ok{background:rgba(0,105,75,.9)}
-    #version{
-      position:fixed;z-index:9999;left:20px;bottom:20px;
-      color:#fff;background:rgba(9,19,28,.75);padding:9px 13px;border-radius:14px;font-size:14px
-    }
-    .a-enter-vr{display:none!important}
-  </style>
-  <script>
-    AFRAME.registerComponent('marker-diagnostic', {
-      init: function () {
-        const status = document.getElementById('status');
-        this.el.addEventListener('markerFound', () => {
-          status.textContent = '✅ MARCADOR RECONHECIDO — rastreamento funcionando';
-          status.classList.add('ok');
-        });
-        this.el.addEventListener('markerLost', () => {
-          status.textContent = 'Marcador perdido. Mostre o desenho inteiro, com toda a borda preta.';
-          status.classList.remove('ok');
-        });
-      }
-    });
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>CEEJA Portal AR — Janela v1.4</title>
 
-    AFRAME.registerComponent('camera-layer-fix', {
-      init: function () {
-        const fix = () => {
-          const v = document.querySelector('video#arjs-video');
-          const c = document.querySelector('.a-canvas');
-          if(v){
-            Object.assign(v.style,{
-              position:'fixed',top:'0',left:'0',width:'100vw',height:'100vh',
-              objectFit:'cover',zIndex:'1',display:'block',visibility:'visible'
-            });
-          }
-          if(c){
-            Object.assign(c.style,{
-              position:'fixed',top:'0',left:'0',width:'100vw',height:'100vh',
-              zIndex:'2',background:'transparent'
-            });
-          }
-          if(this.el.renderer) this.el.renderer.setClearColor(0x000000,0);
-        };
-        this.el.addEventListener('render-target-loaded', fix);
-        setTimeout(fix,300); setTimeout(fix,1000); setTimeout(fix,2500);
-      }
-    });
-  </script>
+<script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+<script src="https://raw.githack.com/AR-js-org/AR.js/3.4.8/aframe/build/aframe-ar.js"></script>
+
+<style>
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:transparent;font-family:Arial,sans-serif}
+#status{
+ position:fixed;z-index:9999;left:18px;right:18px;top:20px;padding:13px 16px;
+ border-radius:18px;background:rgba(9,19,28,.82);color:#fff;text-align:center;
+ font-size:17px;line-height:1.25;box-shadow:0 8px 30px rgba(0,0,0,.25)
+}
+#status.ok{background:rgba(0,105,75,.88)}
+#version{
+ position:fixed;z-index:9999;left:20px;bottom:20px;color:#fff;
+ background:rgba(9,19,28,.75);padding:9px 13px;border-radius:14px;font-size:14px
+}
+.a-enter-vr{display:none!important}
+</style>
+
+<script>
+AFRAME.registerComponent('marker-status', {
+ init:function(){
+   const s=document.getElementById('status');
+   this.el.addEventListener('markerFound',()=>{
+     s.textContent='🚪 Portal encontrado — aproxime-se devagar.';
+     s.classList.add('ok');
+   });
+   this.el.addEventListener('markerLost',()=>{
+     s.textContent='Aponte a câmera para o marcador.';
+     s.classList.remove('ok');
+   });
+ }
+});
+
+AFRAME.registerComponent('camera-layer-fix', {
+ init:function(){
+   const fix=()=>{
+     const v=document.querySelector('video#arjs-video');
+     const c=document.querySelector('.a-canvas');
+     if(v){
+       Object.assign(v.style,{
+         position:'fixed',top:'0',left:'0',width:'100vw',height:'100vh',
+         objectFit:'cover',zIndex:'1',display:'block',visibility:'visible'
+       });
+     }
+     if(c){
+       Object.assign(c.style,{
+         position:'fixed',top:'0',left:'0',width:'100vw',height:'100vh',
+         zIndex:'2',background:'transparent'
+       });
+     }
+     if(this.el.renderer) this.el.renderer.setClearColor(0x000000,0);
+   };
+   this.el.addEventListener('render-target-loaded',fix);
+   setTimeout(fix,300);setTimeout(fix,1000);setTimeout(fix,2500);
+ }
+});
+
+/* A simple, robust "window to another world".
+   No stencil buffer: the portal interior is a physical plane showing a
+   stylized scene, while the real camera remains visible everywhere else. */
+AFRAME.registerComponent('portal-world', {
+ init:function(){
+   const root=this.el;
+
+   // Tiny floating lights animate inside the portal area.
+   const pts=[
+     [-.55,1.05,.015],[-.25,1.55,.018],[.10,1.25,.016],[.43,1.72,.019],
+     [.58,.82,.017],[-.45,.62,.018],[.22,.55,.019]
+   ];
+   pts.forEach((p,i)=>{
+     const e=document.createElement('a-sphere');
+     e.setAttribute('position',p.join(' '));
+     e.setAttribute('radius', i%2 ? '.045' : '.032');
+     e.setAttribute('material',`color:${i%2?'#ff91f6':'#75ffff'}; shader:flat; opacity:.95`);
+     e.setAttribute('animation',
+       `property:position; dir:alternate; dur:${1500+i*180}; loop:true; to:${p[0]} ${p[1]+.16} ${p[2]}`);
+     root.appendChild(e);
+   });
+ }
+});
+</script>
 </head>
+
 <body>
-  <div id="status">Aponte a câmera para o marcador. Vamos testar apenas o reconhecimento.</div>
-  <div id="version">CEEJA • diagnóstico do marcador • v1.3</div>
+<div id="status">Aponte a câmera para o marcador.</div>
+<div id="version">CEEJA • Portal AR • janela v1.4</div>
 
-  <a-scene
-    embedded
-    camera-layer-fix
-    renderer="alpha:true; antialias:true; logarithmicDepthBuffer:true;"
-    vr-mode-ui="enabled:false"
-    arjs="sourceType:webcam; videoTexture:false; debugUIEnabled:false; detectionMode:mono; patternRatio:0.70; trackingMethod:best;">
+<a-scene
+ embedded
+ camera-layer-fix
+ renderer="alpha:true; antialias:true; logarithmicDepthBuffer:true;"
+ vr-mode-ui="enabled:false"
+ arjs="sourceType:webcam; videoTexture:false; debugUIEnabled:false; detectionMode:mono; patternRatio:0.70; trackingMethod:best;">
 
-    <a-marker type="pattern" url="./marcador.patt" marker-diagnostic
-              smooth="true" smoothCount="5" smoothTolerance="0.01" smoothThreshold="2">
-      <a-box position="0 0.45 0" scale="0.65 0.65 0.65"
-             material="color:#00ffff; opacity:0.88; transparent:true"
-             animation="property:rotation; to:0 360 0; loop:true; dur:2200; easing:linear">
-      </a-box>
-      <a-ring position="0 0.03 0" rotation="-90 0 0"
-              radius-inner="0.55" radius-outer="0.62"
-              material="color:#ffffff; opacity:0.9; transparent:true">
-      </a-ring>
-    </a-marker>
+ <a-marker type="pattern" url="./marcador.patt" marker-status
+           smooth="true" smoothCount="5" smoothTolerance="0.01" smoothThreshold="2">
 
-    <a-entity camera></a-entity>
-  </a-scene>
+   <!-- Portal group: upright relative to the marker -->
+   <a-entity position="0 0 0" rotation="-90 0 0">
+
+     <!-- World visible through the doorway -->
+     <a-entity portal-world position="0 0.05 0">
+       <a-plane position="0 1.05 0" width="1.35" height="2.05"
+                material="shader:flat;color:#15133c;side:double"></a-plane>
+
+       <!-- distant sky glow -->
+       <a-circle position="0.38 1.62 0.012" radius=".25"
+                 material="shader:flat;color:#d7a0ff;opacity:.9"></a-circle>
+
+       <!-- mountains / skyline -->
+       <a-triangle position="-0.35 .92 .014"
+                   vertex-a="0 .72 0" vertex-b="-.48 0 0" vertex-c=".48 0 0"
+                   material="shader:flat;color:#443b86"></a-triangle>
+       <a-triangle position=".28 .88 .015"
+                   vertex-a="0 .62 0" vertex-b="-.52 0 0" vertex-c=".52 0 0"
+                   material="shader:flat;color:#332d70"></a-triangle>
+
+       <!-- glowing road -->
+       <a-plane position="0 .40 .020" width=".30" height=".78"
+                material="shader:flat;color:#55f4ef;opacity:.88"></a-plane>
+
+       <!-- towers -->
+       <a-box position="-.43 .60 .022" width=".18" height=".62" depth=".02"
+              material="shader:flat;color:#7d78db"></a-box>
+       <a-box position=".43 .67 .022" width=".20" height=".76" depth=".02"
+              material="shader:flat;color:#a277dd"></a-box>
+     </a-entity>
+
+     <!-- physical luminous frame -->
+     <a-box position="-0.76 1.05 .06" width=".13" height="2.25" depth=".12"
+            material="color:#00e6df;shader:flat;opacity:.92"></a-box>
+     <a-box position=".76 1.05 .06" width=".13" height="2.25" depth=".12"
+            material="color:#00e6df;shader:flat;opacity:.92"></a-box>
+     <a-box position="0 2.12 .06" width="1.65" height=".13" depth=".12"
+            material="color:#00e6df;shader:flat;opacity:.92"></a-box>
+     <a-box position="0 -.02 .06" width="1.65" height=".10" depth=".12"
+            material="color:#00e6df;shader:flat;opacity:.88"></a-box>
+
+   </a-entity>
+ </a-marker>
+
+ <a-entity camera></a-entity>
+</a-scene>
 </body>
 </html>
