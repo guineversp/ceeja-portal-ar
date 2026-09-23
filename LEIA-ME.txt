@@ -1,16 +1,1 @@
-CRIADOR RA CEEJA v6.3 — PORTAL SIMPLIFICADO PARA GITHUB
-
-Correção importante:
-O Portal agora é gerado SEM depender da pasta CONTEUDO.
-
-Estrutura do Portal:
-  index.html
-  marcador.patt
-  cenario.jpg (ou cenario.png)
-  IMPRIMIR-MARCADOR.html
-  LEIA-ME.txt
-
-Assim, basta selecionar todos os arquivos e enviá-los juntos para a raiz do
-repositório GitHub. O index procura a imagem como ./cenario.jpg ou ./cenario.png.
-
-As demais experiências continuam usando suas estruturas anteriores.
+Experiência RA CEEJA\n\nDescompacte e publique a pasta MINHA-EXPERIENCIA-RA inteira. Abra o endereço HTTPS no Chrome do celular, permita a câmera e aponte para o marcador.\n\nPORTAL: aproxime o celular da abertura até entrar no cenário. Use o botão Voltar pelo portal para retornar.

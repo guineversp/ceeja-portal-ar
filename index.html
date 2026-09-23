@@ -125,13 +125,13 @@ AFRAME.registerComponent('portal-traverse', {
    this.inside=true;
    document.getElementById('insideWorld').classList.add('active');
    document.getElementById('status').style.display='none';
-   document.getElementById('version').textContent='CEEJA • Portal RA • dentro de memorias';
+   document.getElementById('version').textContent='CEEJA • Portal RA • dentro de reste';
  },
  leave:function(){
    this.inside=false;
    document.getElementById('insideWorld').classList.remove('active');
    document.getElementById('status').style.display='block';
-   document.getElementById('version').textContent='CEEJA • Portal RA • memorias';
+   document.getElementById('version').textContent='CEEJA • Portal RA • reste';
  },
  tick:function(){
    if(this.inside) return;
@@ -162,9 +162,9 @@ AFRAME.registerComponent('portal-traverse', {
 
 <body>
 <div id="status">Aponte a câmera para o marcador.</div>
-<div id="version">CEEJA • Portal RA • memorias</div>
+<div id="version">CEEJA • Portal RA • reste</div>
 
-<div id="insideWorld" style="background-image:linear-gradient(rgba(0,0,0,.10),rgba(0,0,0,.10)),url('./CONTEUDO/cenario.jpg');background-size:cover;background-position:center;">
+<div id="insideWorld" style="background-image:linear-gradient(rgba(0,0,0,.10),rgba(0,0,0,.10)),url('./cenario.jpg');background-size:cover;background-position:center;">
   <div id="insideHint">✨ Você atravessou o portal</div>
   <div id="exitPortal"></div>
   <button id="backBtn">↩ Voltar pelo portal</button>
@@ -178,7 +178,7 @@ AFRAME.registerComponent('portal-traverse', {
  vr-mode-ui="enabled:false"
  arjs="sourceType:webcam; videoTexture:false; debugUIEnabled:false; detectionMode:mono; patternRatio:0.70; trackingMethod:best;">
 
- <a-assets><img id="portalImg" src="./CONTEUDO/cenario.jpg"></a-assets>
+ <a-assets><img id="portalImg" src="./cenario.jpg"></a-assets>
 
  <a-marker type="pattern" url="./marcador.patt" marker-status portal-traverse
            smooth="true" smoothCount="5" smoothTolerance="0.01" smoothThreshold="2">
