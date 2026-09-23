@@ -111,48 +111,59 @@ AFRAME.registerComponent('portal-traverse', {
  init:function(){
    this.inside=false;
    this.marker=this.el;
-   this.cam=null;
    this.portalCenter=new THREE.Vector3(0,1.0,0);
    this.worldPos=new THREE.Vector3();
    this.camPos=new THREE.Vector3();
-   this.lastVisible=0;
-
-   const back=()=>this.leave();
-   document.getElementById('backBtn').addEventListener('click',back);
+   this.nearSince=0;
+   this.wasNear=false;
+   this.lastSeen=0;
+   document.getElementById('backBtn').addEventListener('click',()=>this.leave());
  },
  enter:function(){
    if(this.inside) return;
    this.inside=true;
    document.getElementById('insideWorld').classList.add('active');
    document.getElementById('status').style.display='none';
-   document.getElementById('version').textContent='CEEJA • Portal RA • dentro de reste';
+   document.getElementById('version').textContent='CEEJA • Portal RA • DENTRO DO PORTAL';
  },
  leave:function(){
    this.inside=false;
+   this.wasNear=false;
+   this.nearSince=0;
    document.getElementById('insideWorld').classList.remove('active');
    document.getElementById('status').style.display='block';
-   document.getElementById('version').textContent='CEEJA • Portal RA • reste';
+   document.getElementById('status').textContent='🚪 Portal encontrado — aproxime-se devagar.';
+   document.getElementById('version').textContent='CEEJA • Portal RA • mesmacoisa';
  },
- tick:function(){
+ tick:function(time){
    if(this.inside) return;
-   if(!this.marker.object3D.visible) return;
    const camEl=document.querySelector('[camera]');
    if(!camEl || !camEl.object3D) return;
+   const visible=this.marker.object3D.visible;
 
-   // Portal center in world coordinates and camera world position.
-   this.worldPos.copy(this.portalCenter);
-   this.marker.object3D.localToWorld(this.worldPos);
-   camEl.object3D.getWorldPosition(this.camPos);
-   const d=this.worldPos.distanceTo(this.camPos);
+   if(visible){
+     this.lastSeen=time;
+     this.worldPos.copy(this.portalCenter);
+     this.marker.object3D.localToWorld(this.worldPos);
+     camEl.object3D.getWorldPosition(this.camPos);
+     const d=this.worldPos.distanceTo(this.camPos);
+     const status=document.getElementById('status');
 
-   // On AR.js marker tracking the units are marker-relative. Trigger only very close,
-   // after the user intentionally approaches the doorway.
-   const s=document.getElementById('status');
-   if(d < 2.75){
-      s.textContent='✨ Quase lá — atravesse a abertura…';
-   }
-   if(d < 2.08){
-      this.enter();
+     // Start "crossing" sooner, before the marker fills/leaves the camera view.
+     if(d < 3.05){
+       status.textContent='✨ Continue avançando pela abertura…';
+       if(!this.wasNear){ this.wasNear=true; this.nearSince=time; }
+       // If the user stays moving/close for ~0.7s, complete the crossing.
+       if(time-this.nearSince > 700) this.enter();
+     } else {
+       this.wasNear=false;
+       this.nearSince=0;
+       status.textContent='🚪 Portal encontrado — aproxime-se devagar.';
+     }
+   } else if(this.wasNear && time-this.lastSeen < 1200){
+     // If tracking is lost just after reaching the doorway, treat it as crossing
+     // instead of cancelling the experience.
+     this.enter();
    }
  }
 });
@@ -162,7 +173,7 @@ AFRAME.registerComponent('portal-traverse', {
 
 <body>
 <div id="status">Aponte a câmera para o marcador.</div>
-<div id="version">CEEJA • Portal RA • reste</div>
+<div id="version">CEEJA • Portal RA • mesmacoisa</div>
 
 <div id="insideWorld" style="background-image:linear-gradient(rgba(0,0,0,.10),rgba(0,0,0,.10)),url('./cenario.jpg');background-size:cover;background-position:center;">
   <div id="insideHint">✨ Você atravessou o portal</div>
