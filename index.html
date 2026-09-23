@@ -125,13 +125,13 @@ AFRAME.registerComponent('portal-traverse', {
    this.inside=true;
    document.getElementById('insideWorld').classList.add('active');
    document.getElementById('status').style.display='none';
-   document.getElementById('version').textContent='CEEJA • Portal AR • DENTRO DO PORTAL • v1.5.1';
+   document.getElementById('version').textContent='CEEJA • Portal RA • dentro de memorias';
  },
  leave:function(){
    this.inside=false;
    document.getElementById('insideWorld').classList.remove('active');
    document.getElementById('status').style.display='block';
-   document.getElementById('version').textContent='CEEJA • Portal AR • atravessável v1.5.1';
+   document.getElementById('version').textContent='CEEJA • Portal RA • memorias';
  },
  tick:function(){
    if(this.inside) return;
@@ -162,18 +162,10 @@ AFRAME.registerComponent('portal-traverse', {
 
 <body>
 <div id="status">Aponte a câmera para o marcador.</div>
-<div id="version">CEEJA • Portal AR • atravessável v1.5.1</div>
+<div id="version">CEEJA • Portal RA • memorias</div>
 
-<div id="insideWorld">
+<div id="insideWorld" style="background-image:linear-gradient(rgba(0,0,0,.10),rgba(0,0,0,.10)),url('./CONTEUDO/cenario.jpg');background-size:cover;background-position:center;">
   <div id="insideHint">✨ Você atravessou o portal</div>
-  <div class="moon"></div>
-  <div class="mountain m1"></div>
-  <div class="mountain m2"></div>
-  <div class="road"></div>
-  <div class="spark" style="left:15%;top:32%"></div>
-  <div class="spark" style="left:78%;top:39%;background:#ff91f6"></div>
-  <div class="spark" style="left:28%;top:18%;background:#ff91f6"></div>
-  <div class="spark" style="left:66%;top:58%"></div>
   <div id="exitPortal"></div>
   <button id="backBtn">↩ Voltar pelo portal</button>
 </div>
@@ -186,39 +178,17 @@ AFRAME.registerComponent('portal-traverse', {
  vr-mode-ui="enabled:false"
  arjs="sourceType:webcam; videoTexture:false; debugUIEnabled:false; detectionMode:mono; patternRatio:0.70; trackingMethod:best;">
 
+ <a-assets><img id="portalImg" src="./CONTEUDO/cenario.jpg"></a-assets>
+
  <a-marker type="pattern" url="./marcador.patt" marker-status portal-traverse
            smooth="true" smoothCount="5" smoothTolerance="0.01" smoothThreshold="2">
 
    <!-- Portal group: upright relative to the marker -->
    <a-entity position="0 0 0">
 
-     <!-- World visible through the doorway -->
-     <a-entity portal-world position="0 0.03 0" scale="1.24 .78 1">
-       <a-plane position="0 .84 0" width="1.82" height="1.58"
-                material="shader:flat;color:#15133c;side:double"></a-plane>
-
-       <!-- distant sky glow -->
-       <a-circle position="0.38 1.62 0.012" radius=".25"
-                 material="shader:flat;color:#d7a0ff;opacity:.9"></a-circle>
-
-       <!-- mountains / skyline -->
-       <a-triangle position="-0.35 .92 .014"
-                   vertex-a="0 .72 0" vertex-b="-.48 0 0" vertex-c=".48 0 0"
-                   material="shader:flat;color:#443b86"></a-triangle>
-       <a-triangle position=".28 .88 .015"
-                   vertex-a="0 .62 0" vertex-b="-.52 0 0" vertex-c=".52 0 0"
-                   material="shader:flat;color:#332d70"></a-triangle>
-
-       <!-- glowing road -->
-       <a-plane position="0 .40 .020" width=".30" height=".78"
-                material="shader:flat;color:#55f4ef;opacity:.88"></a-plane>
-
-       <!-- towers -->
-       <a-box position="-.43 .60 .022" width=".18" height=".62" depth=".02"
-              material="shader:flat;color:#7d78db"></a-box>
-       <a-box position=".43 .67 .022" width=".20" height=".76" depth=".02"
-              material="shader:flat;color:#a277dd"></a-box>
-     </a-entity>
+     <!-- Cenário escolhido pelo professor -->
+     <a-plane position="0 .84 .015" width="1.82" height="1.58"
+              material="shader:flat;src:#portalImg;side:double"></a-plane>
 
      <!-- physical luminous frame -->
      <a-box position="-1.01 .84 .06" width=".13" height="1.80" depth=".12"
